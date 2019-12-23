@@ -34,7 +34,6 @@ def get(dictionary, key):
         return rtn
 
 player = {'1': 'Tony', '2':'pitcher'}
-player2 = {}
 print(get(player, '1'))
 print(get(player, '2'))
 print(get(player, '3'))
