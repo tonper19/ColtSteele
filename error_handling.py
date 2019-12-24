@@ -2,6 +2,7 @@
 Error handling in Python
 '''
 
+
 def get(dictionary, key):
     '''
     get
@@ -17,7 +18,7 @@ def get(dictionary, key):
         Invalid arguments: when the arguments are not a dictionary and a string
 
     '''
-    rtn = ''  
+    rtn = ''
     try:
         key_integer = int(key)
         rtn = dictionary[key]
@@ -26,17 +27,17 @@ def get(dictionary, key):
     except TypeError as err:
         rtn = 'Invalid arguments'
         print(err)
-    except:
-        rtn = 'unknown error'
+    # except:
+    #     rtn = 'unknown error'
     else:
         print('*** success')
     finally:
         return rtn
 
-player = {'1': 'Tony', '2':'pitcher'}
+
+player = {'1': 'Tony', '2': 'pitcher'}
 print(get(player, '1'))
 print(get(player, '2'))
 print(get(player, '3'))
 print(get('tony', '1'))
 print(get(player, 'not a number'))
-
