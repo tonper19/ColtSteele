@@ -15,7 +15,7 @@ def get_joke(topic):
 
 
 def choose_joke(data):
-    joke_message = "Sorry, I don't have any jokes about " + data["search_term"]
+    joke_message = f"Sorry, I don't have any jokes about {data['search_term']}"
     joke_message += "\nPlease try again."
 
     total = len(data['results'])
@@ -24,12 +24,12 @@ def choose_joke(data):
         joke = randint(0, total - 1)
 
         if total == 1:
-            joke_message = "I've got one joke about " + data["search_term"]
+            joke_message = f"I've got one joke about {data['search_term']}"
             joke_message += ". Here it is:"
         else:
-            joke_message = "I've got " + str(total) + " jokes about "
-            joke_message += data["search_term"] + ". Here's one:"
-        joke_message += "\n" + results[joke]["joke"]
+            joke_message = f"I've got {total} jokes about {data['search_term']}"
+            joke_message += ". Here's one:"
+        joke_message += f"\n{results[joke]['joke']}"
     return joke_message
 
 
