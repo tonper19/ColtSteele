@@ -5,12 +5,26 @@ use of OOP inherintance and super
 
 
 class Club:
+    _club_members = 0  # class variable
+
     def __init__(self, name, address):
         self.name = name
         self.address = address
 
     def __repr__(self):
         return f"Club class with the following attributes: name={self.name}, address={self.address}"
+
+    @classmethod
+    def active_club_members(cls):
+        return cls._club_members
+
+    @classmethod
+    def increase_club_members(cls):
+        cls._club_members += 1
+
+    @classmethod
+    def decrease_club_members(cls):
+        cls._club_members -= 1
 
     @property
     def name(self):
@@ -33,11 +47,11 @@ class Club:
         self.__address = new_address
 
 
-class Team(Club):
-    def __init__(self, name, address, sport):
-        super().__init__(name, address)
+class KangaroosTeam(Club):
+    def __init__(self, sport):
+        super().__init__("Brussels Kangaroos", "Avenue Albert Dumont 40")
         self.sport = sport
-        self.team_member_number = 0
+        self.__active_team_member_number = 0
 
     def __repr__(self):
         return f"Team class {self.sport} belongs to " + super().__repr__()
@@ -53,17 +67,27 @@ class Team(Club):
         self.__sport = new_sport
 
     @property
-    def team_member_number(self):
-        return self.__team_member_number
+    def active_team_member_number(self):
+        return self.__active_team_member_number
 
-    @team_member_number.setter
-    def team_member_number(self, team_member_number):
-        self.__team_member_number = team_member_number
+    def increase_team_member(self):
+        self.__active_team_member_number += 1
+        Club.increase_club_members()
 
 
 if __name__ == "__main__":
-    rsh = Team("Brussels Kangaroos", "Avenue Albert Dumont 40", "softball")
+    rsh = KangaroosTeam("softball men")
+    sd1 = KangaroosTeam("softball ladies")
+
     print(rsh)
-    rsh.team_member_number = 1
-    rsh.team_member_number = 2
-    print(rsh.team_member_number)
+    rsh.increase_team_member()
+    print(f"Current {rsh.sport} team members: {rsh.active_team_member_number}")
+    rsh.increase_team_member()
+    print(f"Current {rsh.sport} team members: {rsh.active_team_member_number}")
+
+    for i in range(1, 16):
+        sd1.increase_team_member()
+
+    print(f"Current {sd1.sport} team members: {sd1.active_team_member_number}")
+
+    print(f"Current {sd1.name} club memebers: {Club.active_club_members()}")
