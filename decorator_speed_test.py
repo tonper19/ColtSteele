@@ -35,4 +35,3 @@ def sum_nums_list():
 if __name__ == "__main__":
     sum_nums_gen()
     sum_nums_list()
-
