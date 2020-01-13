@@ -9,6 +9,7 @@ AUTHOR
 from functools import wraps
 from time import time
 
+
 def speed_test(fn):
     @wraps(fn)
     def wrapper(*args, **kwargs):
