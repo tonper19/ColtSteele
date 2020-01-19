@@ -37,7 +37,7 @@ class Player():
         name of the player
     position : str
         field position of the player
-    plays : list 
+    plays : list
         plays the player has made during a game
 
     Methods
@@ -125,12 +125,14 @@ class Team():
         current inning
     outs : int
         current number of outs
-    safe : tuple
+    hit : tuple
         abbreviations that represent a non-out play
     out : tuple
         abbreviations that represent an out play
     plays : tuple
         all possible plays
+    score : list
+        score for each inning
 
     Methods
     -------
@@ -144,9 +146,11 @@ class Team():
         display the generated game scoring sheets
 
     """
-    safe = ("H", "2H", "3H", "HR", "BB", "HBP")
-    out = ("K", "1-3", "2-3", "U3", "4-3",
-           "5-3", "6-3", "IF", "F7", "F8", "F9"
+    hit = {"H": 1, "2H": 2, "3H": 3, "HR": 4}
+    safe = {"BB": 1, "IBB": 1, "HBP": 1}
+    out = ("KS", "Kl", "1-3", "2-3", "U3", "4-3",
+           "5-3", "6-3", "F1", "F2", "F3", "F4",
+           "F5", "F6", "F7", "F8", "F9", "FO"
            )
 
     def __init__(self, name):
@@ -156,7 +160,11 @@ class Team():
         self.at_bat = 1
         self.inning = 1
         self.outs = 0
-        self.plays = self.safe + self.out
+        self.plays = list(self.hit.keys()) + \
+            list(self.safe.keys()) + \
+            list(self.out)
+        self.score = []
+        self.bases = []
 
     def __repr__(self):
         return f"Team class: name={self.name}"
@@ -180,26 +188,77 @@ class Team():
                 self.bench.append(new_player)
 
     def game(self):
+        # refactor: keep the score
+
         # refactor1 to generate a two teams game and play inning by inning
-        # refactor2 keep the score
         # refactor3 allow to make changes to the lineup with the bench
         # refactor4 allow mercy rule
-        if len(self.players) == 9:
-            while self.inning < 10:
-                if self.at_bat > 9:
+
+        def clear_score():
+            self.score = [0] * 10  # index 0 is left untouched
+
+        def empty_bases():
+            # players on base 0: HP, 1: 1B, 2: 2B, 3: 3B
+            # if bases length > 4, players have been pushed by a play
+            self.bases = empty_base * 4
+
+        def play_bases(player):
+            self.bases[0] = player  # player is at bat on home plate
+            play = choice(self.plays)  # and makes a random play
+            player.make_a_play(play)  # persist the play within the player
+
+            if play in self.out:
+                self.outs += 1
+                if self.outs == 3:
+                    self.outs = 0
+                    self.inning += 1
+                    empty_bases()
+            else:
+                # get how many the player advances by concatenating
+                # the hits and safe plays and getting the value
+                how_many_bases = {**self.hit, **self.safe}[play]
+                self.bases = (empty_base * how_many_bases) + [player] + \
+                    self.bases[1:]
+                bases_pushed = self.bases[:4]  # any length > 4 is a play push
+                for runner_on_base_or_empty in bases_pushed:
+                    if isinstance(runner_on_base_or_empty, Player):
+                        self.score[self.inning] += 1
+                    # self.bases.pop()  # cleanup each pushed base
+                self.bases = self.bases[:4]
+
+        # the game starts here!
+        empty_base = [None]
+        clear_score()
+        empty_bases()
+
+        if len(self.players) == 9:  # enough players?
+            while self.inning < 10:  # games are 9 inning max
+                if self.at_bat > 9:  # rotate the lineup
                     self.at_bat = 1
-                play = choice(self.plays)
+
                 idx = self.at_bat - 1
-                self.players[idx].make_a_play(play)
-                if play in self.out:
-                    self.outs += 1
-                    if self.outs == 3:
-                        self.outs = 0
-                        self.inning += 1
+                play_bases(self.players[idx])
+
                 self.at_bat += 1
 
     def scoring_sheet(self):
-        # refactor1 display the score once is available
+        for inning in range(1, 10):
+            print("  |  " + str(inning), end="")
+            if inning == 9:
+                print("  |  ")
+        print("-" * 57)
+
+        idx = 0
+        while idx < len(self.score):
+            if idx > 0:
+                print("  |  " + str(self.score[idx]), end="")
+                if idx == 9:
+                    print("  |  ")
+            idx += 1
+
+        print("\n\nBox Score")
+        print("---------")
+
         idx = 0
         while idx < len(self.players):
             print(f"{idx + 1}. {self.players[idx].name}")
@@ -220,8 +279,8 @@ def main():
     # get the players and buid a lineup and bench
     with open("players.csv") as file:
         csv_reader = DictReader(file)
-        for row in csv_reader:
-            player = Player(row["name"], row["position"])
+        for player_row in csv_reader:
+            player = Player(player_row["name"], player_row["position"])
             brussels_kangaroos.lineup(player)
 
     brussels_kangaroos.game()
