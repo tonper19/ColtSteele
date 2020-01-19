@@ -219,7 +219,7 @@ class Team():
                 how_many_bases = {**self.hit, **self.safe}[play]
                 self.bases = (empty_base * how_many_bases) + [player] + \
                     self.bases[1:]
-                bases_pushed = self.bases[:4]  # any length > 4 is a play push
+                bases_pushed = self.bases[4:]  # any length > 4 is a play push
                 for runner_on_base_or_empty in bases_pushed:
                     if isinstance(runner_on_base_or_empty, Player):
                         self.score[self.inning] += 1
