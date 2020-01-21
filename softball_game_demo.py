@@ -21,10 +21,10 @@ DATE
     # back and continue
 
 """
-import pickle
-import jsonpickle
 from csv import DictReader
 from random import choice
+# import pickle
+# import jsonpickle
 
 
 class Player():
@@ -136,13 +136,15 @@ class Team():
 
     Methods
     -------
-    lineup(Player)
+    name(self)
+        return name of the Team
+    lineup(self, new_player)
         create a new lineup position for player, if the
         lineup is completed with 9 players, add the player
         to the bench
-    game()
+    game(self)
         generate a 9 inning game
-    scoring_sheet()
+    scoring_sheet(self)
         display the generated game scoring sheets
 
     """
@@ -172,6 +174,9 @@ class Team():
     # getters and setters the Python way
     @property
     def name(self):
+        """
+        Getter of name
+        """
         return self.__name
 
     @name.setter
@@ -181,6 +186,11 @@ class Team():
         self.__name = new_name
 
     def lineup(self, new_player):
+        """
+        Add a new player to the lineup. If the lineup is
+        filled with the 9 batters, add the player to the
+        bench
+        """
         if isinstance(new_player, Player):
             if len(self.players) < 9:
                 self.players.append(new_player)
@@ -188,6 +198,10 @@ class Team():
                 self.bench.append(new_player)
 
     def game(self):
+        """
+        generate a team's half game
+        to be refactored to have two teams cometing with each other
+        """
         # refactor: keep the score
 
         # refactor1 to generate a two teams game and play inning by inning
@@ -220,10 +234,10 @@ class Team():
                 self.bases = (empty_base * how_many_bases) + [player] + \
                     self.bases[1:]
                 bases_pushed = self.bases[4:]  # any length > 4 is a play push
-                for runner_on_base_or_empty in bases_pushed:
-                    if isinstance(runner_on_base_or_empty, Player):
-                        self.score[self.inning] += 1
-                    # self.bases.pop()  # cleanup each pushed base
+                # sum of pushed bases with players on them
+                runs_scored = sum([1 for player in bases_pushed
+                                   if isinstance(player, Player)])
+                self.score[self.inning] += runs_scored
                 self.bases = self.bases[:4]
 
         # the game starts here!
@@ -242,21 +256,17 @@ class Team():
                 self.at_bat += 1
 
     def scoring_sheet(self):
-        for inning in range(1, 10):
-            print("  |  " + str(inning), end="")
-            if inning == 9:
-                print("  |  ")
-        print("-" * 57)
+        """
+        Return the score of the Team in the game
+        """
+        return self.score
 
-        idx = 0
-        while idx < len(self.score):
-            if idx > 0:
-                print("  |  " + str(self.score[idx]), end="")
-                if idx == 9:
-                    print("  |  ")
-            idx += 1
-
-        print("\n\nBox Score")
+    def box_score(self):
+        """
+        game's box score for one of the teams
+        """
+        print(f"{self.name}")
+        print("\nBox Score")
         print("---------")
 
         idx = 0
@@ -274,9 +284,15 @@ class Team():
 
 
 def main():
-    brussels_kangaroos = Team("Brussels Kangaroos Men Softball")
+    """
+    generate a baseball game
+    """
+    brussels_kangaroos = Team("Brussels Kangaroos")
+    # ----------------------
+    # to refactor all these:
+    # ----------------------
 
-    # get the players and buid a lineup and bench
+    # get the players and build a lineup and bench
     with open("players.csv") as file:
         csv_reader = DictReader(file)
         for player_row in csv_reader:
@@ -284,8 +300,50 @@ def main():
             brussels_kangaroos.lineup(player)
 
     brussels_kangaroos.game()
-    brussels_kangaroos.scoring_sheet()
+    bru_score = brussels_kangaroos.scoring_sheet()
 
+    scoring_display = " " * 8
+    for inning in range(1, len(bru_score)):
+        scoring_display += "  |  " + str(inning)
+        if inning == 9:
+            scoring_display += "  |  \n"
+    scoring_display += "-" * 72
+    scoring_display += "\n"
+    scoring_display += brussels_kangaroos.name[:8]
+    idx = 0
+    while idx < len(bru_score):
+        if idx > 0:
+            scoring_display += "  |  " + str(bru_score[idx])
+            if idx == 9:
+                scoring_display += f"  |  {sum(bru_score)}\n"
+        idx += 1
+
+    #
+    hoboken_pioneers = Team("Hoboken Pioneers")
+
+    # get the players and build a lineup and bench
+    with open("players_hoboken.csv") as file:
+        csv_reader = DictReader(file)
+        for player_row in csv_reader:
+            player = Player(player_row["name"], player_row["position"])
+            hoboken_pioneers.lineup(player)
+
+    hoboken_pioneers.game()
+    hob_score = hoboken_pioneers.scoring_sheet()
+
+    scoring_display += "-" * 72
+    scoring_display += "\n"
+    idx = 0
+    scoring_display += hoboken_pioneers.name[:8]
+    while idx < len(hob_score):
+        if idx > 0:
+            scoring_display += "  |  " + str(hob_score[idx])
+            if idx == 9:
+                scoring_display += f"  |  {sum(hob_score)}\n"
+        idx += 1
+    print(scoring_display)
+    brussels_kangaroos.box_score()
+    hoboken_pioneers.box_score()
 
 if __name__ == "__main__":
     main()
