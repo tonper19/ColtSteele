@@ -1,7 +1,7 @@
 """
 Python date and time examples 2
 
-Time calculation across timezones. Based on the course 
+Time calculation across timezones. Based on the course
 Working with dates and times in Python
 by Georgy Pashkov
 
@@ -41,8 +41,8 @@ def load_airports(csv_file):
     airports = {}
     with open(csv_file, newline="") as data_file:
         for entry in csv.reader(data_file):
-            a = Airport(csv_entry=entry)
-            airports[a.iata] = a
+            this_airport = Airport(csv_entry=entry)
+            airports[this_airport.iata] = this_airport
     return airports
 
 class Flight:
@@ -62,15 +62,15 @@ class Flight:
         Set a datetime with the timezone
         Always test for invalid and ambigous time
         """
-        tz = pytz.timezone(tz_name)
+        time_zone = pytz.timezone(tz_name)
         try:
-            return tz.localize(date_time, is_dst=None)
+            return time_zone.localize(date_time, is_dst=None)
         except pytz.exceptions.AmbiguousTimeError:
             print("Error")
-            return tz.localize(date_time, is_dst=True)
+            return time_zone.localize(date_time, is_dst=True)
         except pytz.exceptions.InvalidTimeError:
             print("*** The time is invalid")
-            return tz.localize(datetime(1970, 1, 1, 0, 0, 0), is_dst=None)
+            return time_zone.localize(datetime(1970, 1, 1, 0, 0, 0), is_dst=None)
 
     @property
     def duration(self):
@@ -142,7 +142,7 @@ def main():
                  , departure=datetime(2020, 3, 29, 1, 10, 0)
                  , arrival=datetime(2020, 3, 29, 7, 50, 0)
                 )
-        # Invalid time. this flight departs on date time that does not exists 
+        # Invalid time. this flight departs on date time that does not exists
         # in Paris:
         # the DST changed from 02:00 to 03:00 from CET to CEST (Summer Time)
         , Flight(flight_id="AF22"
@@ -154,15 +154,15 @@ def main():
         # Ambigous departure time: change from Summer to Winter, 2:00 is
         # repeated twice
         , Flight(flight_id="DL82"
-                , origin=airports["BRU"]
-                , destination=airports["ATL"]
-                , departure=datetime(2018, 10, 28, 2, 10, 0)
-                , arrival=datetime(2018, 10, 28, 6, 50, 0)
-            )
+                 , origin=airports["BRU"]
+                 , destination=airports["ATL"]
+                 , departure=datetime(2018, 10, 28, 2, 10, 0)
+                 , arrival=datetime(2018, 10, 28, 6, 50, 0)
+                )
     ]
 
-    for f in flights:
-        print(f)
+    for flight in flights:
+        print(flight)
 
 if __name__ == "__main__":
     main()
