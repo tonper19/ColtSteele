@@ -81,10 +81,21 @@ class ShippingContainer:
         """
         self.owner_code = owner_code
         self.contents = contents
-        self.bic = ShippingContainer._make_bic_code(
+        self.bic = self._make_bic_code(
             owner_code=owner_code,
             serial=ShippingContainer._get_next_serial()
         )
+
+class RefrigeratedShippingContainer(ShippingContainer):
+    """Refirgerated shipping container object.
+
+    Example of static methods with inheritance.
+    """
+    @staticmethod
+    def _make_bic_code(owner_code, serial):
+        return iso6346.create(owner_code=owner_code,
+                              serial=str(serial).zfill(6),
+                              category="R")
 
 def main():
     """Examples of properties and class methods.
@@ -105,6 +116,10 @@ def main():
                                              ["food", "textiles", "medicines"])
     print(f"Container bic Number: {c4.bic} Cargo:"
           f" {'Empty' if c4.contents == None else c4.contents}")
+
+    # refrigerated container inherited from the ShippingContainer
+    r1 = RefrigeratedShippingContainer("MAE", "fish")
+    print(f"Container bic Number: {r1.bic} Cargo: {r1.contents}")
 
 if __name__ == "__main__":
     main()
