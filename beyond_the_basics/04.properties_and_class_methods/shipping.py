@@ -145,6 +145,23 @@ class RefrigeratedShippingContainer(ShippingContainer):
         return (super().volume_ft3
                 - RefrigeratedShippingContainer.FRIDGE_VOLUME_FT3)
 
+class HeatedRefrigeratedShippingContainer(RefrigeratedShippingContainer):
+    MIN_CELSIUS = -20.0
+
+    @RefrigeratedShippingContainer.celsius.setter
+    def celsius(self, value):
+        """The celsius object from which we retrieve the setter decorator
+        is not visible in the scope of the derived class. We solve this
+        by fully qualifying the name of the celsius object with the base
+        class name: RefrigeratedShippingContainer.
+        To call the parent's celsius setter: we retrieve the base class
+        property setter function from the base class property and calling
+        it directly available through the fset attribute of the property.
+        """
+        if value < HeatedRefrigeratedShippingContainer.MIN_CELSIUS:
+            raise ValueError("Temperature too cold!")
+        RefrigeratedShippingContainer.celsius.fset(self, value)
+
 def main():
     """Examples of properties and class methods.
     """
@@ -184,7 +201,17 @@ def main():
           f"\n   It measures {r2.volume_ft3} cubic feet.")
     # r2.celsius = 5  # not allowed
 
+    # refrigerated container inherited from the ShippingContainer
+    h1 = HeatedRefrigeratedShippingContainer.create_with_items("MAE", 40, 
+                                                         ["bananas", "mangos"], 
+                                                         celsius=3)
+    print(f"Container bic Number: {h1.bic} Cargo: {h1.contents}"
+          f"\n   The temperature of the container is {h1.celsius} Celsius / "
+          f"{h1.fahreneheit} Fahrenheit."
+          f"\n   It measures {h1.volume_ft3} cubic feet.")
 
+    # h1.celsius = -21  # none of these
+    # h1.celsius = 5    # are allowed.
 if __name__ == "__main__":
     main()
 
