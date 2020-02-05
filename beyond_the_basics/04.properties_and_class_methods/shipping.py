@@ -41,7 +41,7 @@ class ShippingContainer:
         return result
     
     @classmethod
-    def create_empty(cls, owner_code):
+    def create_empty(cls, owner_code, *args, **kwargs):
         """Create a shipping container instance without any content.
         
         Args:
@@ -53,10 +53,10 @@ class ShippingContainer:
         Note:
             class methods as constructor.
         """
-        return cls(owner_code, contents=None)
+        return cls(owner_code, contents=None, *args, **kwargs)
 
     @classmethod
-    def create_with_items(cls, owner_code, items):
+    def create_with_items(cls, owner_code, items, *args, **kwargs):
         """Create a shipping container with multiple items as content.
         
         Args:
@@ -68,7 +68,7 @@ class ShippingContainer:
         Note:
             class methods as constructor.
         """
-        return cls(owner_code, contents=list(items))
+        return cls(owner_code, contents=list(items), *args, **kwargs)
 
 
     def __init__(self, owner_code, contents):
@@ -91,11 +91,21 @@ class RefrigeratedShippingContainer(ShippingContainer):
 
     Example of static methods with inheritance.
     """
+
+    MAX_CELSIUS = 4.0
+
     @staticmethod
     def _make_bic_code(owner_code, serial):
         return iso6346.create(owner_code=owner_code,
                               serial=str(serial).zfill(6),
                               category="R")
+
+    def __init__(self, owner_code, contents, celsius):
+        super().__init__(owner_code, contents)
+        if celsius > RefrigeratedShippingContainer.MAX_CELSIUS:
+            raise ValueError("Temperature to hot!")
+        self.celsius = celsius
+
 
 def main():
     """Examples of properties and class methods.
@@ -118,8 +128,9 @@ def main():
           f" {'Empty' if c4.contents == None else c4.contents}")
 
     # refrigerated container inherited from the ShippingContainer
-    r1 = RefrigeratedShippingContainer("MAE", "fish")
+    r1 = RefrigeratedShippingContainer.create_with_items("MAE", ["sardines", "tuna", "cod"], celsius=2.0)
     print(f"Container bic Number: {r1.bic} Cargo: {r1.contents}")
+
 
 if __name__ == "__main__":
     main()
