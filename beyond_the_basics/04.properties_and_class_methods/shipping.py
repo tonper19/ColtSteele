@@ -95,6 +95,14 @@ class RefrigeratedShippingContainer(ShippingContainer):
     MAX_CELSIUS = 4.0
 
     @staticmethod
+    def _c_to_f(celsius):
+        return round(celsius * 9/5 + 32, 2)
+
+    @staticmethod
+    def _f_to_c(fahrenheit):
+        return round((fahrenheit - 32) * 5/9, 2)
+
+    @staticmethod
     def _make_bic_code(owner_code, serial):
         return iso6346.create(owner_code=owner_code,
                               serial=str(serial).zfill(6),
@@ -102,10 +110,25 @@ class RefrigeratedShippingContainer(ShippingContainer):
 
     def __init__(self, owner_code, contents, celsius):
         super().__init__(owner_code, contents)
-        if celsius > RefrigeratedShippingContainer.MAX_CELSIUS:
-            raise ValueError("Temperature to hot!")
         self.celsius = celsius
+    
+    @property
+    def celsius(self):
+        return self._celsius
 
+    @celsius.setter
+    def celsius(self, value):
+        if value > RefrigeratedShippingContainer.MAX_CELSIUS:
+            raise ValueError("Temperature too hot!")
+        self._celsius = value
+
+    @property
+    def fahrenheit(self):
+        return RefrigeratedShippingContainer._c_to_f(self.celsius)
+    
+    @fahrenheit.setter
+    def fahreneheit(self, value):
+        self.celsius = RefrigeratedShippingContainer._f_to_c(value)
 
 def main():
     """Examples of properties and class methods.
@@ -128,8 +151,21 @@ def main():
           f" {'Empty' if c4.contents == None else c4.contents}")
 
     # refrigerated container inherited from the ShippingContainer
-    r1 = RefrigeratedShippingContainer.create_with_items("MAE", ["sardines", "tuna", "cod"], celsius=2.0)
+    r1 = RefrigeratedShippingContainer.create_with_items("MAE", 
+                                                         ["sardines", "tuna", 
+                                                         "cod"],
+                                                         celsius=2.0)
+
     print(f"Container bic Number: {r1.bic} Cargo: {r1.contents}")
+
+    # refrigerated container inherited from the ShippingContainer
+    r2 = RefrigeratedShippingContainer.create_with_items("ESC", 
+                                                         ["beef", "porc"], 
+                                                         celsius=-18)
+    print(f"Container bic Number: {r2.bic} Cargo: {r2.contents}"
+          f"\n   The temperature of the container is {r2.celsius} Celsius / "
+          f"{r2.fahreneheit} Fahrenheit")
+    # r2.celsius = 5  # not allowed
 
 
 if __name__ == "__main__":
