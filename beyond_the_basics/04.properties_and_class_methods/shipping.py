@@ -26,6 +26,8 @@ class ShippingContainer:
             series of items.
         bic (str): International Container Bureau (BIC) serial number.
     """
+    HEIGHT_FT = 8.5
+    WIDTH_FT = 8.0
 
     next_serial = 1964  # next available serial number
 
@@ -41,7 +43,7 @@ class ShippingContainer:
         return result
     
     @classmethod
-    def create_empty(cls, owner_code, *args, **kwargs):
+    def create_empty(cls, owner_code, length_ft, *args, **kwargs):
         """Create a shipping container instance without any content.
         
         Args:
@@ -53,10 +55,10 @@ class ShippingContainer:
         Note:
             class methods as constructor.
         """
-        return cls(owner_code, contents=None, *args, **kwargs)
+        return cls(owner_code, length_ft, contents=None, *args, **kwargs)
 
     @classmethod
-    def create_with_items(cls, owner_code, items, *args, **kwargs):
+    def create_with_items(cls, owner_code, length_ft, items, *args, **kwargs):
         """Create a shipping container with multiple items as content.
         
         Args:
@@ -68,10 +70,10 @@ class ShippingContainer:
         Note:
             class methods as constructor.
         """
-        return cls(owner_code, contents=list(items), *args, **kwargs)
+        return cls(owner_code, length_ft, contents=list(items), *args, **kwargs)
 
 
-    def __init__(self, owner_code, contents):
+    def __init__(self, owner_code, length_ft, contents):
         """Initialize the ShippingContainer.
         
         Args:
@@ -79,12 +81,18 @@ class ShippingContainer:
             contents (str, list): container contents in the form of
                 a single item (str), or multiple items (list).
         """
-        self.owner_code = owner_code
         self.contents = contents
+        self.length_ft = length_ft
         self.bic = self._make_bic_code(
             owner_code=owner_code,
             serial=ShippingContainer._get_next_serial()
         )
+
+    @property
+    def volume_ft3(self):
+        return (ShippingContainer.HEIGHT_FT * 
+                ShippingContainer.WIDTH_FT * 
+                self.length_ft)
 
 class RefrigeratedShippingContainer(ShippingContainer):
     """Refirgerated shipping container object.
@@ -93,6 +101,7 @@ class RefrigeratedShippingContainer(ShippingContainer):
     """
 
     MAX_CELSIUS = 4.0
+    FRIDGE_VOLUME_FT3 = 100
 
     @staticmethod
     def _c_to_f(celsius):
@@ -108,8 +117,8 @@ class RefrigeratedShippingContainer(ShippingContainer):
                               serial=str(serial).zfill(6),
                               category="R")
 
-    def __init__(self, owner_code, contents, celsius):
-        super().__init__(owner_code, contents)
+    def __init__(self, owner_code, length_ft, contents, celsius):
+        super().__init__(owner_code, length_ft, contents)
         self.celsius = celsius
     
     @property
@@ -130,28 +139,35 @@ class RefrigeratedShippingContainer(ShippingContainer):
     def fahreneheit(self, value):
         self.celsius = RefrigeratedShippingContainer._f_to_c(value)
 
+    @property
+    def volume_ft3(self):
+        """Refrigerated container volume."""
+        return (super().volume_ft3
+                - RefrigeratedShippingContainer.FRIDGE_VOLUME_FT3)
+
 def main():
     """Examples of properties and class methods.
     """
-    c1 = ShippingContainer("YML", "coffee")
+    c1 = ShippingContainer("YML", 20, "coffee")
     print(f"Container bic Number: {c1.bic} Cargo: {c1.contents}")
 
-    c2 = ShippingContainer("MAE", "bananas")
+    c2 = ShippingContainer("MAE", 40, "bananas")
     print(f"Container bic Number: {c2.bic} Cargo: {c2.contents}")
 
     # using class methods as constructors: empty container
-    c3 = ShippingContainer.create_empty("YML")
+    c3 = ShippingContainer.create_empty("YML", length_ft=20)
     print(f"Container bic Number: {c3.bic} Cargo:"
           f" {'Empty' if c3.contents == None else c3.contents}")
 
     # using class methods as constructors: multiple items container
-    c4 = ShippingContainer.create_with_items("MAE", 
+    c4 = ShippingContainer.create_with_items("MAE", 40, 
                                              ["food", "textiles", "medicines"])
     print(f"Container bic Number: {c4.bic} Cargo:"
-          f" {'Empty' if c4.contents == None else c4.contents}")
+          f" {'Empty' if c4.contents == None else c4.contents}"
+          f"\n   It measures {c4.volume_ft3} cubic feet.")
 
     # refrigerated container inherited from the ShippingContainer
-    r1 = RefrigeratedShippingContainer.create_with_items("MAE", 
+    r1 = RefrigeratedShippingContainer.create_with_items("MAE", 20, 
                                                          ["sardines", "tuna", 
                                                          "cod"],
                                                          celsius=2.0)
@@ -159,12 +175,13 @@ def main():
     print(f"Container bic Number: {r1.bic} Cargo: {r1.contents}")
 
     # refrigerated container inherited from the ShippingContainer
-    r2 = RefrigeratedShippingContainer.create_with_items("ESC", 
+    r2 = RefrigeratedShippingContainer.create_with_items("ESC", 40, 
                                                          ["beef", "porc"], 
                                                          celsius=-18)
     print(f"Container bic Number: {r2.bic} Cargo: {r2.contents}"
           f"\n   The temperature of the container is {r2.celsius} Celsius / "
-          f"{r2.fahreneheit} Fahrenheit")
+          f"{r2.fahreneheit} Fahrenheit."
+          f"\n   It measures {r2.volume_ft3} cubic feet.")
     # r2.celsius = 5  # not allowed
 
 
