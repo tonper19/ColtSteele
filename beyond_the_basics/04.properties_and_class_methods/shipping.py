@@ -14,6 +14,7 @@ Notes:
     different behaviors without having to resort to contorsions within
     the __init__ method to interpret different forms of argument lists.
 
+    This demo uses the Template Method Pattern.
 """
 import iso6346
 
@@ -21,7 +22,7 @@ class ShippingContainer:
     """Shipping container object.
     
     Attributes:
-        owner_code (str): container owner's code.
+        length_ft (int): length in feet.
         contents (str, list): container's content, it could be a 
             series of items.
         bic (str): International Container Bureau (BIC) serial number.
@@ -48,6 +49,9 @@ class ShippingContainer:
         
         Args:
             owner_code (str): container owner's code.
+            length_ft (int): length in feet.
+            *args 
+            **kwargs
         
         Returns:
             ShippingContainer instance with no contents.
@@ -63,6 +67,11 @@ class ShippingContainer:
         
         Args:
             owner_code (str): container owner's code.
+            length_ft (int): length in feet.
+            items (str, list): container contents in the form of
+                a single item (str), or multiple items (list).
+            *args 
+            **kwargs
         
         Returns:
             ShippingContainer instance with list of items as contents.
@@ -78,6 +87,7 @@ class ShippingContainer:
         
         Args:
             owner_code (str): container owner's code.
+            length_ft (int): length in feet.
             contents (str, list): container contents in the form of
                 a single item (str), or multiple items (list).
         """
@@ -88,12 +98,28 @@ class ShippingContainer:
             serial=ShippingContainer._get_next_serial()
         )
 
-    @property
-    def volume_ft3(self):
+    def _calc_volume(self):
+        """Redirects the calculating of the cubic feet.
+        
+        By doing this we are implementing the Template Method pattern
+        and avoiding @decorated functions overriding which are rather
+        ugly to the eye.
+
+        Returns:
+            Container volume in cubic feet.
+        """
         return (ShippingContainer.HEIGHT_FT * 
                 ShippingContainer.WIDTH_FT * 
                 self.length_ft)
 
+    @property
+    def volume_ft3(self):
+        """Calculate the container volume in cubic feet.
+        
+        This @decorated function body is redirected to the _calc_volume
+        function to avoid overriding it.
+        """
+        return self._calc_volume()
 class RefrigeratedShippingContainer(ShippingContainer):
     """Refirgerated shipping container object.
 
@@ -125,42 +151,62 @@ class RefrigeratedShippingContainer(ShippingContainer):
     def celsius(self):
         return self._celsius
 
-    @celsius.setter
-    def celsius(self, value):
+    def _set_celsius(self, value):
+        """Redirects the setting of the container temperature.
+        
+        By doing this we are implementing the Template Method pattern
+        and avoiding @decorated functions overriding which are rather
+        ugly to the eye.
+
+        Args:
+            value (float): temperature degrees in Celsius.
+        """
         if value > RefrigeratedShippingContainer.MAX_CELSIUS:
             raise ValueError("Temperature too hot!")
         self._celsius = value
+
+    @celsius.setter
+    def celsius(self, value):
+        self._set_celsius(value)
 
     @property
     def fahrenheit(self):
         return RefrigeratedShippingContainer._c_to_f(self.celsius)
     
     @fahrenheit.setter
-    def fahreneheit(self, value):
+    def fahrenheit(self, value):
         self.celsius = RefrigeratedShippingContainer._f_to_c(value)
 
-    @property
-    def volume_ft3(self):
+    def _calc_volume(self):
         """Refrigerated container volume."""
-        return (super().volume_ft3
+        return (super()._calc_volume()
                 - RefrigeratedShippingContainer.FRIDGE_VOLUME_FT3)
 
 class HeatedRefrigeratedShippingContainer(RefrigeratedShippingContainer):
     MIN_CELSIUS = -20.0
+    # the following was replaced by the _set_celsius function below
+    # 
+    # @RefrigeratedShippingContainer.celsius.setter
+    # def celsius(self, value):
+    #     """The celsius object from which we retrieve the setter decorator
+    #     is not visible in the scope of the derived class. We solve this
+    #     by fully qualifying the name of the celsius object with the base
+    #     class name: RefrigeratedShippingContainer.
+    #     To call the parent's celsius setter: we retrieve the base class
+    #     property setter function from the base class property and calling
+    #     it directly available through the fset attribute of the property.
+    #     """
+    #     if value < HeatedRefrigeratedShippingContainer.MIN_CELSIUS:
+    #         raise ValueError("Temperature too cold!")
+    #     RefrigeratedShippingContainer.celsius.fset(self, value)
 
-    @RefrigeratedShippingContainer.celsius.setter
-    def celsius(self, value):
-        """The celsius object from which we retrieve the setter decorator
-        is not visible in the scope of the derived class. We solve this
-        by fully qualifying the name of the celsius object with the base
-        class name: RefrigeratedShippingContainer.
-        To call the parent's celsius setter: we retrieve the base class
-        property setter function from the base class property and calling
-        it directly available through the fset attribute of the property.
-        """
+    # by using the template method pattern we avoid overriding
+    # the decorated function celsius.
+    def _set_celsius(self, value):
         if value < HeatedRefrigeratedShippingContainer.MIN_CELSIUS:
             raise ValueError("Temperature too cold!")
-        RefrigeratedShippingContainer.celsius.fset(self, value)
+        super()._set_celsius(value)
+
 
 def main():
     """Examples of properties and class methods.
@@ -197,7 +243,7 @@ def main():
                                                          celsius=-18)
     print(f"Container bic Number: {r2.bic} Cargo: {r2.contents}"
           f"\n   The temperature of the container is {r2.celsius} Celsius / "
-          f"{r2.fahreneheit} Fahrenheit."
+          f"{r2.fahrenheit} Fahrenheit."
           f"\n   It measures {r2.volume_ft3} cubic feet.")
     # r2.celsius = 5  # not allowed
 
@@ -207,7 +253,7 @@ def main():
                                                          celsius=3)
     print(f"Container bic Number: {h1.bic} Cargo: {h1.contents}"
           f"\n   The temperature of the container is {h1.celsius} Celsius / "
-          f"{h1.fahreneheit} Fahrenheit."
+          f"{h1.fahrenheit} Fahrenheit."
           f"\n   It measures {h1.volume_ft3} cubic feet.")
 
     # h1.celsius = -21  # none of these
