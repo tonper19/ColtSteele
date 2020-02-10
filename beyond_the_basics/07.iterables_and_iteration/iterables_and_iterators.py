@@ -1,6 +1,8 @@
 import itertools
 from functools import reduce
 import operator
+import datetime
+import time
 
 class Trace:
     # Trace class taken from lesson 3
@@ -137,6 +139,51 @@ class MapReduce:
             d[word] = d.get(word, 0) + count
         return d
 
+class ExampleIterator:
+    def __init__(self, data):
+        self.index = 0
+        self.data = data
+    
+    def __iter__(self):
+        return self
+
+    def __next__(self):
+        if self.index >= len(self.data):
+            raise StopIteration()
+
+        rslt = self.data[self.index]
+        self.index += 1
+        return rslt
+
+class ExampleIterable:
+    def __init__(self):
+        self.data = [2, 33, 19, 13]
+    
+    def __iter__(self):
+        return ExampleIterator(self.data)
+
+class AlternateIterable:
+    def __init__(self):
+        self.data = [19, 20, 21]
+    
+    def __getitem__(self, idx):
+        return self.data[idx]
+
+class ExtendedIter:
+    def ext(self):
+        """Extended iter() is often used for creating infinite sequences
+        from existing functions.
+        """
+        i = iter(datetime.datetime.now, None)
+        cnt = 0
+        # make the condition True and it will run forever displaying 
+        # the current date-time.
+        while cnt < 25:
+            time.sleep(.250)
+            d = next(i)
+            print(d.strftime("%b %d %Y %H:%M:%S"))
+            cnt += 1
+
 
 def main():
     cdemo = ComprehensionDemo()
@@ -190,6 +237,32 @@ def main():
     total_counts = reduce(mr.combine_counts, counts)
     print(total_counts)
 
+    print("*** Iterating manually:")
+    iter = ExampleIterator([9, 8, 7])
+    try:
+        print(f"{next(iter)}")
+        print(f"{next(iter)}")
+        print(f"{next(iter)}")
+        print(f"{next(iter)}")
+        print(f"{next(iter)}")
+    except StopIteration:
+        print("StopIterarion error raised")
+
+    print("*** Iterator and iterable example")
+    for i in ExampleIterable():
+        print(f"Iterator item: {i}")
+
+    print("List comprehension with an iterable example")
+    lst = [i * 3 for i in ExampleIterable()]    
+    print(lst)
+
+    print("*** Alternate iterable using __getitem__()")
+    for i in AlternateIterable():
+        print(i)
+
+    print("*** Extended iter() example")
+    x = ExtendedIter()
+    x.ext()
 
 if __name__ == "__main__":
     main()
