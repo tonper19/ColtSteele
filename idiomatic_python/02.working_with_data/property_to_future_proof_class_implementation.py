@@ -3,7 +3,7 @@ class Product():
 
     def __init__(self, name, price):
         self.name = name 
-        self._price = price 
+        self._price = price
 
     @property
     def price(self):
