@@ -48,6 +48,10 @@ class IntList(SimpleList):
     def __repr__(self):
         return "IntList({!r})".format(list(self))
 
+class SortedIntList(IntList, SortedList): 
+    def __repr__(self):
+        return "SortedIntList({!r})".format(list(self))
+
 
 def main():
     sl = SimpleList([3, 1, 2])
@@ -64,6 +68,12 @@ def main():
     except TypeError:
         print("There was a TypeError")
 
-        
+    # multiple inheritance
+    sil = SortedIntList([23, 42, 19])
+    print(f"{sil.__repr__()}")
+    sil.add(-17)
+    print(f"{sil.__repr__()}")
+
+
 if __name__ == "__main__":
     main()
